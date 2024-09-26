@@ -32,10 +32,10 @@ soc_group = lightbulb.Group("soc", "Sword of Convallaria commands")
 
 database = Database.get_instance()
 if local_db := os.environ.get("LOCAL_DB"):
-    database.load_local(local_db)
+    database.load_local(local_db.strip("\"'"))
 else:
-    database.load_remote("https://raw.githubusercontent.com/Miners-of-Convallaria/database/main/global")
-
+    raise ValueError('The environment "LOCAL_DB" wasn\'t set')
+    # database.load_remote("https://raw.githubusercontent.com/Miners-of-Convallaria/database/main/global")
 
 UnitView.reinit_database()
 GachaView.reinit_database()
@@ -78,23 +78,23 @@ class GachaCommand(
 lightbulb_client.register(soc_group)
 
 
-@lightbulb_client.register()
-class UpdateDB(
-    lightbulb.SlashCommand,
-    name="update_db",
-    description="Update the database",
-):
-    @lightbulb.invoke
-    async def invoke(self, ctx: lightbulb.Context) -> None:
-        await ctx.respond("Updating database...")
-        try:
-            database.load_remote("https://raw.githubusercontent.com/Miners-of-Convallaria/database/main/global")
-            UnitView.reinit_database()
-            GachaView.reinit_database()
-        except Exception as e:
-            await ctx.respond(f"Failed to update database: {e}")
-        else:
-            await ctx.respond("Database updated")
+# @lightbulb_client.register()
+# class UpdateDB(
+#     lightbulb.SlashCommand,
+#     name="update_db",
+#     description="Update the database",
+# ):
+#     @lightbulb.invoke
+#     async def invoke(self, ctx: lightbulb.Context) -> None:
+#         await ctx.respond("Updating database...")
+#         try:
+#             database.load_remote("https://raw.githubusercontent.com/Miners-of-Convallaria/database/main/global")
+#             UnitView.reinit_database()
+#             GachaView.reinit_database()
+#         except Exception as e:
+#             await ctx.respond(f"Failed to update database: {e}")
+#         else:
+#             await ctx.respond("Database updated")
 
 
 if __name__ == "__main__":
