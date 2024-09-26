@@ -3,8 +3,8 @@
 # See LICENSE file for details.
 import time
 from datetime import UTC  # type: ignore
-from datetime import _TzInfo
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import attrs
 import hikari
@@ -13,7 +13,9 @@ import miru
 from .database import Database
 from .utils import clean_name
 
-UTC: _TzInfo
+if TYPE_CHECKING:
+    from datetime import _TzInfo
+    UTC: _TzInfo
 
 
 @attrs.define(slots=True, frozen=True)
