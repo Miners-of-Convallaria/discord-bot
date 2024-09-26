@@ -4,9 +4,10 @@
 from __future__ import annotations
 
 import json
+import os
+import re
 from typing import Type
 from typing import TypeVar
-from urllib.request import urlopen
 
 import attr
 
@@ -66,22 +67,43 @@ class Database:
         ]
 
     def load_local(self, fp: str) -> None:
+        def load_json(fp: str) -> dict[int, dict[str, str | int | float | bool]]:
+            with open(fp, "rb") as f:
+                data = f.read()
+                text = data.decode("utf-8", errors="surrogateescape")
+                try:
+                    return json.loads(text)
+                except json.JSONDecodeError:
+                    try:
+                        text = re.sub(r"[\x00-\x19]+", "", text)
+                        return json.loads(text)
+                    except json.JSONDecodeError:
+                        text = re.sub(r"[\x00-\x20]+", "", text)
+                        return json.loads(text)
+
         def _load_local(name: str, clz: Type[T]) -> dict[int, T]:
-            with open(f"{fp}/{name}.json", "r", encoding="utf8") as f:
-                items = json.load(f)
-                return {v["id"]: clz(**v) for v in items}
+            print(f"Loading {name} from {fp}")
+            db_fp = os.path.join(fp, "db", f"{name}.json")
+            items = load_json(db_fp)
+            # loc_fp = os.path.join(fp, "en", f"{name}.json")
+            # if os.path.exists(loc_fp):
+            #     print(f"Loading {name} localization from {loc_fp}")
+            #     loc = load_json(loc_fp)
+            #     for k, v in loc.items():
+            #         items[k].update(v)
+            return {int(v["id"]): clz(**v) for v in items.values()}
 
         for k, c in self.get_table_mapping():
             getattr(self, k).clear()
             getattr(self, k).update(_load_local(k, c))
 
-    def load_remote(self, url_prefix: str) -> None:
-        for k, c in self.get_table_mapping():
-            url = f"{url_prefix}/{k}.json"
-            print(f"Downloading {url}")
-            data = json.loads(urlopen(url).read())
-            getattr(self, k).clear()
-            getattr(self, k).update({v["id"]: c(**v) for v in data})
+    # def load_remote(self, url_prefix: str) -> None:
+    #     for k, c in self.get_table_mapping():
+    #         url = f"{url_prefix}/{k}.json"
+    #         print(f"Downloading {url}")
+    #         data = json.loads(urlopen(url).read())
+    #         getattr(self, k).clear()
+    #         getattr(self, k).update({v["id"]: c(**v) for v in data})
 
 
 @attr.define(frozen=True, slots=True)
@@ -90,6 +112,7 @@ class OnlineRoleUnit:
     m_online_unit_builds: list[int]
     m_online_role_unit_voice_samples: list[int]
     m_online_role_unit_special_skills: list[int]
+    m_online_role_friendship_head_portraits: list[int]
     name: str
     idonline_role: int
     idunit: int
@@ -262,6 +285,7 @@ class Skill:
     id: int
     m_specialitys: list[int]
     m_skill_tags: list[int]
+    m_keywords: list[int]
     name: str
     editor_name: str
     desc: str
@@ -278,6 +302,8 @@ class Skill:
     range_width: int
     attack_up: int
     attack_down: int
+    keyword_ids: str
+    cast_tip: str
     damage: int
     damage_percent: int
     damage_factor: int
