@@ -168,9 +168,8 @@ class UnitView(miru.View):
 
         role = self.role
         unit = self.unit
-        model = self.model
 
-        icon_id = model.icon
+        icon_id = self.unit.icon or self.model.icon
         faction = database.faction.get(unit.faction, None)
 
         color = None
@@ -202,9 +201,8 @@ class UnitView(miru.View):
         database = Database.get_instance()
 
         unit = self.unit
-        model = self.model
 
-        icon_id = model.icon
+        icon_id = self.unit.icon or self.model.icon
         profession = database.profession[unit.profession]
         try:
             personality = database.unit_personality[unit.personality_id]
@@ -244,6 +242,7 @@ class UnitView(miru.View):
                 inline=True,
             ),
             hikari.EmbedField(name="Jump", value=f"⇑ {unit.jump_up} / ⇓ {unit.jump_down}", inline=True),
+            hikari.EmbedField(name="SPD", value=f"{unit.speed}", inline=True),
             # /end
             hikari.EmbedField(
                 name=f"Trait - {trait.name}",
@@ -262,7 +261,7 @@ class UnitView(miru.View):
         embed = self.get_base_embed()
         if skin.idunit_model != 0 and skin.idunit_model != model.id:
             model = database.unit_model[skin.idunit_model]
-            icon_id = model.icon
+            icon_id = skin.icon or model.icon
             embed.set_author(
                 name=self.key,
                 icon=HEAD_ICON_URL.format(icon_id),
